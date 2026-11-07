@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Will you be my Valentine?</title>
+<style>
+:root{--bg:#f3d3df;--card:#fbf9fa;--ink:#1c1b1e;--yes:#e8275f;--yes-ink:#fff;--no:#e4e1e3;--no-ink:#5b5860;--muted:#6d6a72;--cat:#eeaa72;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a1620;--card:#3a2430;--ink:#f7ecf1;--no:#55404b;--no-ink:#e8d9e0;--muted:#c5a9b6}}
+:root[data-theme="dark"]{--bg:#2a1620;--card:#3a2430;--ink:#f7ecf1;--no:#55404b;--no-ink:#e8d9e0;--muted:#c5a9b6}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito","Trebuchet MS",system-ui,sans-serif;display:grid;place-items:center;padding:16px;overflow:hidden}
+.card{background:var(--card);border-radius:22px;box-shadow:0 14px 40px rgba(120,30,70,.18);width:min(560px,100%);padding:32px 24px 22px;text-align:center;position:relative}
+svg.cat{width:130px;height:auto;display:block;margin:0 auto 10px}
+h1{font-size:clamp(1.5rem,5.6vw,2.1rem);line-height:1.2;margin:0 0 22px;font-weight:800}
+.stage{position:relative;height:130px;max-width:100%}
+button{font:inherit;font-weight:800;border:0;border-radius:999px;cursor:pointer;padding:12px 28px;font-size:1.05rem}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+#yes{background:var(--yes);color:var(--yes-ink);position:absolute;left:22%;top:20px;transform-origin:center;transition:transform .25s ease;box-shadow:0 6px 16px rgba(232,39,95,.35)}
+#no{background:var(--no);color:var(--no-ink);position:absolute;left:62%;top:20px;transition:left .22s ease,top .22s ease}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+#win{display:none}
+#win .yay{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:800;margin:0 0 14px}
+#win svg{width:min(240px,70%);height:auto}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+@media (prefers-reduced-motion:reduce){#yes,#no{transition:none}}
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <svg class="cat" id="cat" viewBox="0 0 120 110" aria-hidden="true">
+    <polygon points="22,40 30,8 58,26" fill="var(--cat)"/>
+    <polygon points="98,40 90,8 62,26" fill="var(--cat)"/>
+    <ellipse cx="60" cy="62" rx="44" ry="38" fill="var(--cat)"/>
+    <circle cx="44" cy="58" r="4.5" fill="#222"/><circle cx="76" cy="58" r="4.5" fill="#222"/>
+    <path d="M56 70 q4 6 8 0 z" fill="#e8527f"/>
+    <path id="heart" d="M100 12 c-6-9-20-3-14 8 c3 5 9 9 14 13 c5-4 11-8 14-13 c6-11-8-17-14-8z" fill="#e8275f"/>
+  </svg>
+
+  <div id="ask">
+    <h1>tanvi will you be my valentine?</h1>
+    <div class="stage" id="stage">
+      <button id="yes" type="button">Yes</button>
+      <button id="no" type="button">No</button>
+    </div>
+    <p class="hint">“No” seems a bit shy 😈</p>
+  </div>
+
+  <div id="win">
+    <h1>tanvi will you be my valentine?</h1>
+    <p class="yay">YAY! 🎉</p>
+    <svg viewBox="0 0 120 110" aria-label="Happy cat">
+      <polygon points="22,40 30,8 58,26" fill="var(--cat)"/>
+      <polygon points="98,40 90,8 62,26" fill="var(--cat)"/>
+      <ellipse cx="60" cy="62" rx="44" ry="38" fill="var(--cat)"/>
+      <path d="M36 58 q8-10 16 0" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M68 58 q8-10 16 0" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M52 72 q8 12 16 0 z" fill="#c4304f"/>
+      <circle cx="32" cy="70" r="7" fill="#f28ba4" opacity=".6"/><circle cx="88" cy="70" r="7" fill="#f28ba4" opacity=".6"/>
+    </svg>
+  </div>
+</main>
+<canvas id="fx"></canvas>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage'),yes=document.getElementById('yes'),no=document.getElementById('no');
+  var dodges=0;
+  function place(px,py){
+    var s=stage.getBoundingClientRect(),b=no.getBoundingClientRect();
+    var maxX=s.width-b.width,maxY=s.height-b.height,x,y,tries=0;
+    do{
+      x=Math.random()*maxX;y=Math.random()*maxY;tries++;
+      var cx=s.left+x+b.width/2,cy=s.top+y+b.height/2;
+      var far=px==null||Math.hypot(cx-px,cy-py)>110;
+    }while(!far&&tries<30);
+    no.style.left=x+'px';no.style.top=y+'px';
+  }
+  function dodge(e){
+    if(e&&e.cancelable)e.preventDefault();
+    var p=e&&e.touches?e.touches[0]:e;
+    place(p?p.clientX:null,p?p.clientY:null);
+    dodges++;
+    yes.style.transform='scale('+Math.min(1+dodges*0.12,2.2)+')';
+  }
+  no.addEventListener('mouseenter',dodge);
+  no.addEventListener('pointerdown',dodge);
+  no.addEventListener('touchstart',dodge,{passive:false});
+  no.addEventListener('focus',function(){dodge(null);yes.focus();});
+  no.addEventListener('click',function(e){e.preventDefault();dodge(e);});
+
+  var fx=document.getElementById('fx'),ctx=fx.getContext('2d'),parts=[],run=false;
+  function size(){fx.width=innerWidth;fx.height=innerHeight;}
+  addEventListener('resize',size);size();
+  function burst(){
+    var colors=['#e8275f','#f5b83d','#4cc3a0','#6a8cff','#f28ba4','#fff'];
+    for(var i=0;i<160;i++){
+      parts.push({x:innerWidth/2,y:innerHeight*0.4,vx:(Math.random()-.5)*14,vy:Math.random()*-13-2,
+        r:Math.random()*6+3,c:colors[i%colors.length],rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:0});
+    }
+    if(!run){run=true;tick();}
+  }
+  function tick(){
+    ctx.clearRect(0,0,fx.width,fx.height);
+    parts=parts.filter(function(p){return p.y<fx.height+20&&p.life<260;});
+    parts.forEach(function(p){
+      p.vy+=.32;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life++;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.c;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);ctx.restore();
+    });
+    if(parts.length)requestAnimationFrame(tick);else{run=false;ctx.clearRect(0,0,fx.width,fx.height);}
+  }
+  yes.addEventListener('click',function(){
+    document.getElementById('cat').style.display='none';
+    document.getElementById('ask').style.display='none';
+    document.getElementById('win').style.display='block';
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)burst();
+  });
+})();
+</script>
+</body>
+</html>
